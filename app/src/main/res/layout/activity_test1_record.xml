@@ -3,7 +3,7 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent"
               android:orientation="vertical"
-              tools:context=".MainVideoActivity" >
+              tools:context=".test1.Test1RecordActivity" >
 
     <SurfaceView
             android:id="@+id/surfaceView"

@@ -1,16 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:tools="http://schemas.android.com/tools"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:orientation="vertical"
-              tools:context=".MainVideoActivity">
-
-    <Button
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/record"
-            android:text="录制"/>
+              android:orientation="vertical" android:layout_width="match_parent"
+              android:layout_height="match_parent">
     <Button android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:id="@+id/play"
-            android:text="观看"/>
+            android:id="@+id/test1"
+            android:text="test1"/>
+    <Button android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:id="@+id/test2"
+            android:text="test2"/>
 </LinearLayout>

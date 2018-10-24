@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.crte.monitoring">
-
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.CAMERA"/>
     <application
             android:allowBackup="true"
             android:icon="@mipmap/ic_launcher"
@@ -16,7 +19,12 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name=".MainVideoActivity"/>
+        <activity android:name=".test1.Test1Activity"/>
+        <activity android:name=".test1.Test1RecordActivity"/>
+        <activity android:name=".test1.Test1PlayActivity"/>
+        <activity android:name=".test2.Test2Activity"/>
+        <activity android:name=".test2.Test2PlayActivity"/>
+        <activity android:name=".test2.Test2RecordActivity"/>
     </application>
 
 </manifest>

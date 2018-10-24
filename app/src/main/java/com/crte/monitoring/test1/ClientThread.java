@@ -1,4 +1,4 @@
-package com.crte.monitoring;
+package com.crte.monitoring.test1;
 
 import android.graphics.Rect;
 import android.graphics.YuvImage;
@@ -46,7 +46,7 @@ public class ClientThread implements Runnable {
         public void handleMessage(Message msg){
             if(msg.what==0x111){
                 try {
-                    socket = new Socket("10.0.56.232",3000);
+                    socket = new Socket("192.168.2.128",3000);
                     os = socket.getOutputStream(); 
                     YuvImage image = (YuvImage) msg.obj;
                     if(socket.isOutputShutdown()){
