@@ -8,6 +8,8 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import com.crte.monitoring.test1.Test1Activity
 import com.crte.monitoring.test2.Test2Activity
+import com.crte.monitoring.test3.Test3Activity
+import com.crte.monitoring.test4.Test4Activity
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity:AppCompatActivity() {
@@ -24,6 +26,12 @@ class MainActivity:AppCompatActivity() {
         }
         test2.setOnClickListener {
             startActivity(Intent(this, Test2Activity::class.java))
+        }
+        test3.setOnClickListener {
+            startActivity(Intent(this, Test3Activity::class.java))
+        }
+        test4.setOnClickListener {
+            startActivity(Intent(this, Test4Activity::class.java))
         }
 
         if(Build.VERSION.SDK_INT>= Build.VERSION_CODES.M){

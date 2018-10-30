@@ -1,17 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.crte.monitoring">
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.crte.monitoring">
+
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.CAMERA"/>
+
     <application
-            android:allowBackup="true"
-            android:icon="@mipmap/ic_launcher"
-            android:label="@string/app_name"
-            android:roundIcon="@mipmap/ic_launcher_round"
-            android:supportsRtl="true"
-            android:theme="@style/AppTheme">
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -22,9 +25,19 @@
         <activity android:name=".test1.Test1Activity"/>
         <activity android:name=".test1.Test1RecordActivity"/>
         <activity android:name=".test1.Test1PlayActivity"/>
+
         <activity android:name=".test2.Test2Activity"/>
         <activity android:name=".test2.Test2PlayActivity"/>
         <activity android:name=".test2.Test2RecordActivity"/>
+
+        <activity android:name=".test3.Test3Activity"/>
+        <activity android:name=".test3.Test3RecordActivity"/>
+        <activity android:name=".test3.Test3RecordActivity1"/>
+        <activity android:name=".test3.Test3PlayActivity1"/>
+
+        <activity android:name=".test4.Test4Activity"/>
+        <activity android:name=".test4.Test4PlayActivity"/>
+        <activity android:name=".test4.Test4RecordActivity"/>
     </application>
 
 </manifest>

@@ -5,27 +5,35 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <Button
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/test1"
-        android:text="test1"/>
+        android:gravity="center"
+        android:padding="16dp"
+        android:id="@+id/tv_content"/>
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="16dp"
+        android:id="@+id/et_content"/>
+
+    <Button
+        android:id="@+id/btn_init"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="init"/>
 
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/test2"
-        android:text="test2"/>
+        android:text="open"
+        android:id="@+id/btn_open"/>
 
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/test3"
-        android:text="test3"/>
-
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/test4"
-        android:text="test4"/>
+        android:text="close"
+        android:id="@+id/btn_close"/>
 </LinearLayout>
