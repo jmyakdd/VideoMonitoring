@@ -6,11 +6,9 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import com.crte.monitoring.test1.Test1Activity
-import com.crte.monitoring.test2.Test2Activity
-import com.crte.monitoring.test3.Test3Activity
-import com.crte.monitoring.test4.Test4Activity
-import kotlinx.android.synthetic.main.activity_main.*
+import com.crte.monitoring.test4.Test4PlayActivity
+import com.crte.monitoring.test4.Test4RecordActivity
+import kotlinx.android.synthetic.main.activity_test.*
 
 class MainActivity:AppCompatActivity() {
     val permissions = arrayOf(
@@ -20,18 +18,13 @@ class MainActivity:AppCompatActivity() {
     )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        test1.setOnClickListener {
-            startActivity(Intent(this,Test1Activity::class.java))
+        setContentView(R.layout.activity_test)
+        record.setOnClickListener {
+            startActivity(Intent(this, Test4RecordActivity::class.java))
         }
-        test2.setOnClickListener {
-            startActivity(Intent(this, Test2Activity::class.java))
-        }
-        test3.setOnClickListener {
-            startActivity(Intent(this, Test3Activity::class.java))
-        }
-        test4.setOnClickListener {
-            startActivity(Intent(this, Test4Activity::class.java))
+
+        play.setOnClickListener {
+            startActivity(Intent(this, Test4PlayActivity::class.java))
         }
 
         if(Build.VERSION.SDK_INT>= Build.VERSION_CODES.M){
