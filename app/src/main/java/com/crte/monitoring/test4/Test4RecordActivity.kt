@@ -1,20 +1,18 @@
 package com.crte.monitoring.test4
 
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
 import android.util.Log
+import com.crte.monitoring.App
 import com.crte.monitoring.R
 import com.github.nkzawa.emitter.Emitter
-import com.github.nkzawa.socketio.client.IO
 import com.github.nkzawa.socketio.client.Socket
 import kotlinx.android.synthetic.main.activity_test4_record.*
 import org.json.JSONException
 import org.json.JSONObject
 import org.webrtc.*
-import java.net.URISyntaxException
 import java.util.*
 
-class Test4RecordActivity : AppCompatActivity() {
+class Test4RecordActivity : BaseActivity() {
 
     // Local preview screen position before call is connected.
     private val LOCAL_X_CONNECTING = 0
@@ -40,8 +38,10 @@ class Test4RecordActivity : AppCompatActivity() {
         setContentView(R.layout.activity_test4_record)
 
         btn_init.setOnClickListener {
-
+            socket.emit("initRecord")
         }
+
+        tv_content.setText(App.callId)
 
         gsv.setPreserveEGLContextOnPause(true)
         gsv.setKeepScreenOn(true)
@@ -54,21 +54,8 @@ class Test4RecordActivity : AppCompatActivity() {
     }
 
     private fun init() {
-        factory = PeerConnectionFactory()
-        try {
-            socket = IO.socket(Content.host)
-        } catch (e: URISyntaxException) {
-            return
-        }
-        socket.on("id", object : Emitter.Listener {
-            override fun call(vararg args: Any?) {
-                setText(args[0].toString())
-
-                val message = JSONObject()
-                message.put("name", "android_test")
-                socket.emit("readyToStream", message)
-            }
-        })
+        factory = App.factory
+        socket = App.socket
         socket.on("message", object : Emitter.Listener {
             override fun call(vararg args: Any?) {
                 var json: JSONObject = args[0] as JSONObject
@@ -115,27 +102,23 @@ class Test4RecordActivity : AppCompatActivity() {
                         }
                     }
                     "opt" -> {
-                        if(localMS==null) {
-                            setCamera()
-                            peer!!.addStream(localMS)
-                            sendMessage(callId, "init", null)
-                        }else{
-                            videoSource!!.restart()
-                            gsv.onResume()
-                        }
+                        setCamera()
+                        peer!!.addStream(localMS)
+                        sendMessage(callId, "init", null)
                     }
-                    "close"->{
+                    "close" -> {
                         videoSource!!.stop()
                         gsv.onPause()
                     }
                 }
             }
         })
-        socket.connect()
 
         pcConstraints.mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"))
         pcConstraints.mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"))
         pcConstraints.optional.add(MediaConstraints.KeyValuePair("DtlsSrtpKeyAgreement", "true"))
+
+//        setCamera()
     }
 
     fun setText(string: String) {
@@ -145,13 +128,18 @@ class Test4RecordActivity : AppCompatActivity() {
     }
 
     fun setCamera() {
-        localMS = factory.createLocalMediaStream("ARDAMS")
-        val videoConstraints = MediaConstraints()
-        videoCapturer = getVideoCapturer()
-        videoSource = factory.createVideoSource(videoCapturer, videoConstraints)
-        videoTrack = factory.createVideoTrack("ARDAMSv0", videoSource)
-        localMS!!.addTrack(videoTrack)
-        localMS!!.videoTracks.get(0).addRenderer(VideoRenderer(localRender))
+        if (App.localStream == null) {
+            localMS = factory.createLocalMediaStream("ARDAMS")
+            val videoConstraints = MediaConstraints()
+            videoCapturer = getVideoCapturer()
+            videoSource = factory.createVideoSource(videoCapturer, videoConstraints)
+            videoTrack = factory.createVideoTrack("ARDAMSv0", videoSource)
+            localMS!!.addTrack(videoTrack)
+            localMS!!.videoTracks.get(0).addRenderer(VideoRenderer(localRender))
+            App.localStream = localMS
+        } else {
+            localMS = App.localStream
+        }
     }
 
     private fun getVideoCapturer(): VideoCapturerAndroid {
@@ -164,9 +152,6 @@ class Test4RecordActivity : AppCompatActivity() {
             peer!!.removeStream(localMS)
             peer!!.close()
         }
-        videoSource!!.stop()
-        socket.disconnect()
-        socket.close()
         super.onDestroy()
     }
 
@@ -209,7 +194,7 @@ class Test4RecordActivity : AppCompatActivity() {
         }
 
         override fun onSignalingChange(p0: PeerConnection.SignalingState?) {
-            Log.e(TAG, "onSignalingChange")
+            Log.e(TAG, "onSignalingChange:" + p0)
         }
 
         override fun onRemoveStream(p0: MediaStream?) {
@@ -219,11 +204,18 @@ class Test4RecordActivity : AppCompatActivity() {
         }
 
         override fun onIceConnectionChange(p0: PeerConnection.IceConnectionState?) {
-            Log.e(TAG, "onIceConnectionChange")
+            Log.e(TAG, "onIceConnectionChange:" + p0)
             if (p0 == PeerConnection.IceConnectionState.DISCONNECTED) {
                 Log.e(TAG, "连接断开")
-                peer!!.close()
-                peer = null
+                if (peer != null) {
+                    peer!!.removeStream(localMS)
+                    peer!!.close()
+                }
+                if (videoSource != null) {
+                    videoSource!!.stop()
+                    localMS!!.dispose()
+                    localMS = null
+                }
             }
         }
 

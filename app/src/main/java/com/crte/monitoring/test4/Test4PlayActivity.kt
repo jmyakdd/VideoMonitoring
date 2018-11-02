@@ -1,11 +1,10 @@
 package com.crte.monitoring.test4
 
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
 import android.util.Log
+import com.crte.monitoring.App
 import com.crte.monitoring.R
 import com.github.nkzawa.emitter.Emitter
-import com.github.nkzawa.socketio.client.IO
 import com.github.nkzawa.socketio.client.Socket
 import kotlinx.android.synthetic.main.activity_test4_play.*
 import org.json.JSONException
@@ -15,7 +14,7 @@ import java.net.URISyntaxException
 import java.util.*
 
 
-class Test4PlayActivity : AppCompatActivity() {
+class Test4PlayActivity : BaseActivity() {
 
     // Local preview screen position before call is connected.
     private val LOCAL_X_CONNECTING = 0
@@ -36,8 +35,10 @@ class Test4PlayActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_test4_play)
 
+        tv_content.setText(App.callId)
+
         btn_init.setOnClickListener {
-            createConnect()
+            socket.emit("getClient", "")
         }
 
         btn_open.setOnClickListener {
@@ -67,21 +68,12 @@ class Test4PlayActivity : AppCompatActivity() {
     }
 
     private fun init() {
-        factory = PeerConnectionFactory()
+        factory = App.factory
         try {
-            socket = IO.socket(Content.host)
+            socket = App.socket
         } catch (e: URISyntaxException) {
             return
         }
-        socket.on("id", object : Emitter.Listener {
-            override fun call(vararg args: Any?) {
-                setText(args[0].toString())
-
-                val message = JSONObject()
-                message.put("name", "android_test")
-                socket.emit("readyToStream", message)
-            }
-        })
         socket.on("message", object : Emitter.Listener {
             override fun call(vararg args: Any?) {
                 var json: JSONObject = args[0] as JSONObject
@@ -122,10 +114,16 @@ class Test4PlayActivity : AppCompatActivity() {
                                 payload.getString("candidate")
                             )
                             peer!!.addIceCandidate(candidate)
-                            Log.e(TAG,"addIceCandidate")
+                            Log.e(TAG, "addIceCandidate")
                         }
                     }
                 }
+            }
+        })
+        socket.on("getClient", object : Emitter.Listener {
+            override fun call(vararg args: Any?) {
+                Log.e("data", args[0].toString())
+                callId = args[0].toString()
             }
         })
         socket.connect()
@@ -145,13 +143,7 @@ class Test4PlayActivity : AppCompatActivity() {
         super.onDestroy()
         if (peer != null) {
             peer!!.close()
-            peer = null
         }
-        factory.dispose()
-        socket.disconnect()
-        socket.close()
-        socket.disconnect()
-        socket.close()
     }
 
     /**
@@ -197,7 +189,7 @@ class Test4PlayActivity : AppCompatActivity() {
         }
 
         override fun onSignalingChange(p0: PeerConnection.SignalingState?) {
-            Log.e(TAG, "onSignalingChange")
+            Log.e(TAG, "onSignalingChange:" + p0)
         }
 
         override fun onRemoveStream(p0: MediaStream?) {
@@ -207,7 +199,7 @@ class Test4PlayActivity : AppCompatActivity() {
         }
 
         override fun onIceConnectionChange(p0: PeerConnection.IceConnectionState?) {
-            Log.e(TAG, "onIceConnectionChange")
+            Log.e(TAG, "onIceConnectionChange:" + p0)
             if (p0 == PeerConnection.IceConnectionState.DISCONNECTED) {
                 Log.e(TAG, "连接断开")
                 peer!!.close()
