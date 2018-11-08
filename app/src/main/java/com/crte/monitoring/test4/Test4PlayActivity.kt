@@ -1,10 +1,14 @@
 package com.crte.monitoring.test4
 
 import android.os.Bundle
+import android.text.TextUtils
 import android.util.Log
+import android.view.View
+import android.widget.Toast
 import com.crte.monitoring.App
 import com.crte.monitoring.R
 import com.github.nkzawa.emitter.Emitter
+import com.github.nkzawa.socketio.client.IO
 import com.github.nkzawa.socketio.client.Socket
 import kotlinx.android.synthetic.main.activity_test4_play.*
 import org.json.JSONException
@@ -25,32 +29,37 @@ class Test4PlayActivity : BaseActivity() {
     private val TAG = Test4PlayActivity::class.java.canonicalName
     private lateinit var socket: Socket
     private var peer: PeerConnection? = null
-    private lateinit var factory: PeerConnectionFactory
     private var pcConstraints = MediaConstraints()
     private val iceServers = LinkedList<PeerConnection.IceServer>()
-    private var callId = Content.callID
+    private var callId = ""
+    private var myId = ""
     private var remoteRender: VideoRenderer.Callbacks? = null
+    private var isConnect = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_test4_play)
 
-        tv_content.setText(App.callId)
-
-        btn_init.setOnClickListener {
-            socket.emit("getClient", "")
-        }
-
         btn_open.setOnClickListener {
+            if (!isConnect) {
+                Toast.makeText(this, "车尾端未接入网络", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
             var json = JSONObject()
             json.put("data", "test")
             sendMessage(callId, "opt", json)
+            setContentVisibility(false)
         }
 
         btn_close.setOnClickListener {
+            if (!isConnect) {
+                Toast.makeText(this, "车尾端未接入网络", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
             var json = JSONObject()
             json.put("data", "test")
             sendMessage(callId, "close", json)
+            setContentVisibility(true)
         }
 
         gsv.setPreserveEGLContextOnPause(true)
@@ -63,69 +72,15 @@ class Test4PlayActivity : BaseActivity() {
         )
     }
 
-    private fun createConnect() {
-        sendMessage(callId, "init", null)
-    }
-
     private fun init() {
-        factory = App.factory
         try {
-            socket = App.socket
+            socket = IO.socket(Content.host)
         } catch (e: URISyntaxException) {
-            return
+            e.printStackTrace()
         }
-        socket.on("message", object : Emitter.Listener {
-            override fun call(vararg args: Any?) {
-                var json: JSONObject = args[0] as JSONObject
-                Log.e("test", json.toString())
-                var type = json.getString("type")
-                var from = json.getString("from")
-                var payload: JSONObject? = null
-                if (!type.equals("init")) {
-                    payload = json.getJSONObject("payload")
-                }
-                if (peer == null) {
-                    peer = factory.createPeerConnection(iceServers, pcConstraints, MyObserver())
-                }
-                when (type) {
-                    "init" -> {
-                        peer!!.createOffer(MySdpObserver(), pcConstraints)
-                    }
-                    "offer" -> {
-                        val sdp = SessionDescription(
-                            SessionDescription.Type.fromCanonicalForm(payload!!.getString("type")),
-                            payload.getString("sdp")
-                        )
-                        peer!!.setRemoteDescription(MySdpObserver(), sdp)
-                        peer!!.createAnswer(MySdpObserver(), pcConstraints)
-                    }
-                    "answer" -> {
-                        val sdp = SessionDescription(
-                            SessionDescription.Type.fromCanonicalForm(payload!!.getString("type")),
-                            payload.getString("sdp")
-                        )
-                        peer!!.setRemoteDescription(MySdpObserver(), sdp)
-                    }
-                    "candidate" -> {
-                        if (peer!!.getRemoteDescription() != null) {
-                            val candidate = IceCandidate(
-                                payload!!.getString("id"),
-                                payload.getInt("label"),
-                                payload.getString("candidate")
-                            )
-                            peer!!.addIceCandidate(candidate)
-                            Log.e(TAG, "addIceCandidate")
-                        }
-                    }
-                }
-            }
-        })
-        socket.on("getClient", object : Emitter.Listener {
-            override fun call(vararg args: Any?) {
-                Log.e("data", args[0].toString())
-                callId = args[0].toString()
-            }
-        })
+        socket.on("id", onId)
+        socket!!.on("message", onMessage)
+        socket!!.on("getClient", onGetClient)
         socket.connect()
 
         pcConstraints.mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"))
@@ -133,17 +88,86 @@ class Test4PlayActivity : BaseActivity() {
         pcConstraints.optional.add(MediaConstraints.KeyValuePair("DtlsSrtpKeyAgreement", "true"))
     }
 
-    fun setText(string: String) {
-        runOnUiThread {
-            tv_content.setText(string)
+    private val onId = object : Emitter.Listener {
+        override fun call(vararg args: Any?) {
+            myId = args[0].toString()
+            val message = JSONObject()
+            try {
+                message.put("name", "android_play")
+                socket.emit("readyToStream", message)
+                socket!!.emit("getClient", App.groupId)
+            } catch (e: JSONException) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private val onMessage = object : Emitter.Listener {
+        override fun call(vararg args: Any?) {
+            var json: JSONObject = args[0] as JSONObject
+            Log.e("test", json.toString())
+            var type = json.getString("type")
+            var from = json.getString("from")
+            var payload: JSONObject? = null
+            if (!type.equals("init")) {
+                payload = json.getJSONObject("payload")
+            }
+            when (type) {
+                "init" -> {
+                    if (peer == null) {
+                        peer = App.factory.createPeerConnection(iceServers, pcConstraints, MyObserver())
+                    }
+                    peer!!.createOffer(MySdpObserver(), pcConstraints)
+                }
+                "offer" -> {
+                    val sdp = SessionDescription(
+                        SessionDescription.Type.fromCanonicalForm(payload!!.getString("type")),
+                        payload.getString("sdp")
+                    )
+                    peer!!.setRemoteDescription(MySdpObserver(), sdp)
+                    peer!!.createAnswer(MySdpObserver(), pcConstraints)
+                }
+                "answer" -> {
+                    val sdp = SessionDescription(
+                        SessionDescription.Type.fromCanonicalForm(payload!!.getString("type")),
+                        payload.getString("sdp")
+                    )
+                    peer!!.setRemoteDescription(MySdpObserver(), sdp)
+                }
+                "candidate" -> {
+                    if (peer!!.getRemoteDescription() != null) {
+                        val candidate = IceCandidate(
+                            payload!!.getString("id"),
+                            payload.getInt("label"),
+                            payload.getString("candidate")
+                        )
+                        peer!!.addIceCandidate(candidate)
+                        Log.e(TAG, "addIceCandidate")
+                    }
+                }
+            }
+        }
+    }
+
+    private val onGetClient = object : Emitter.Listener {
+        override fun call(vararg args: Any?) {
+            Log.e("data", args[0].toString())
+            callId = args[0].toString()
+            if(!TextUtils.isEmpty(callId)){
+                isConnect = true
+            }
         }
     }
 
     override fun onDestroy() {
-        super.onDestroy()
         if (peer != null) {
-            peer!!.close()
+            peer!!.dispose()
+            peer = null
         }
+        socket.off()
+        socket.disconnect()
+        socket.close()
+        super.onDestroy()
     }
 
     /**
@@ -159,7 +183,7 @@ class Test4PlayActivity : BaseActivity() {
         message.put("to", to)
         message.put("type", type)
         message.put("payload", payload)
-        socket.emit("message", message)
+        socket!!.emit("message", message)
     }
 
     inner class MyObserver : PeerConnection.Observer {
@@ -171,7 +195,7 @@ class Test4PlayActivity : BaseActivity() {
         override fun onAddStream(p0: MediaStream?) {
             Log.e(TAG, "onAddStream")
             if (p0 != null) {
-                p0.videoTracks.get(0).addRenderer(VideoRenderer(remoteRender))
+                p0!!.videoTracks.get(0).addRenderer(VideoRenderer(remoteRender))
             }
         }
 
@@ -194,8 +218,13 @@ class Test4PlayActivity : BaseActivity() {
 
         override fun onRemoveStream(p0: MediaStream?) {
             Log.e(TAG, "onRemoveStream")
-            peer!!.close()
-            peer = null
+//            p0!!.videoTracks.get(0).removeRenderer(VideoRenderer(remoteRender))
+            if (peer != null) {
+                peer!!.close()
+                peer = null
+                setContentVisibility(true)
+            }
+            isConnect = false
         }
 
         override fun onIceConnectionChange(p0: PeerConnection.IceConnectionState?) {
@@ -204,11 +233,19 @@ class Test4PlayActivity : BaseActivity() {
                 Log.e(TAG, "连接断开")
                 peer!!.close()
                 peer = null
+                setContentVisibility(true)
+                isConnect = false
             }
         }
 
         override fun onRenegotiationNeeded() {
             Log.e(TAG, "onRenegotiationNeeded")
+        }
+    }
+
+    private fun setContentVisibility(b: Boolean) {
+        runOnUiThread {
+            content.visibility = if (b) View.VISIBLE else View.GONE
         }
     }
 

@@ -8,6 +8,12 @@
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:text="init"
+        android:id="@+id/btn_init"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:text="open"
         android:id="@+id/btn_open"/>
 
@@ -17,23 +23,8 @@
         android:text="close"
         android:id="@+id/btn_close"/>
 
-    <RelativeLayout
+    <android.opengl.GLSurfaceView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <android.opengl.GLSurfaceView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:id="@+id/gsv"/>
-
-        <TextView
-            android:id="@+id/content"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:text="视频未打开"
-            android:textColor="#ffffff"
-            android:background="#000000"
-            android:textSize="20sp"/>
-    </RelativeLayout>
+        android:layout_height="match_parent"
+        android:id="@+id/gsv"/>
 </LinearLayout>

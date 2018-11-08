@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.text.TextUtils
 import android.widget.Toast
 import com.crte.monitoring.test4.BaseActivity
 import com.crte.monitoring.test4.Test4PlayActivity
@@ -18,23 +19,34 @@ class MainActivity : BaseActivity() {
         Manifest.permission.CAMERA
     )
 
+    var isCheckPermission = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_test)
         record.setOnClickListener {
-            if (!App.isConnectServer) {
-                Toast.makeText(this@MainActivity, "未连接服务器", Toast.LENGTH_SHORT).show()
+            if (TextUtils.isEmpty(group.text.toString())) {
+                Toast.makeText(this, "编组不能为空", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            App.groupId = group.text.toString().toInt()
+            if (!isCheckPermission) {
+                Toast.makeText(this, "尚未设置请求权限", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             startActivity(Intent(this, Test4RecordActivity::class.java))
         }
 
         play.setOnClickListener {
-            if (!App.isConnectServer) {
-                Toast.makeText(this@MainActivity, "未连接服务器", Toast.LENGTH_SHORT).show()
+            if (TextUtils.isEmpty(group.text.toString())) {
+                Toast.makeText(this, "编组不能为空", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            startActivity(Intent(this, Test4PlayActivity::class.java))
+            App.groupId = group.text.toString().toInt()
+            if (!isCheckPermission)
+                Toast.makeText(this, "尚未设置请求权限", Toast.LENGTH_SHORT).show()
+            else
+                startActivity(Intent(this, Test4PlayActivity::class.java))
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -45,7 +57,7 @@ class MainActivity : BaseActivity() {
                 }
             }
         }
-        App.connect()
+        isCheckPermission = true
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -55,7 +67,7 @@ class MainActivity : BaseActivity() {
                     return
                 }
             }
-            App.connect()
+            isCheckPermission = true
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
