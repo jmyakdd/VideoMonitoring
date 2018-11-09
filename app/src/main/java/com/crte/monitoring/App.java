@@ -2,6 +2,7 @@ package com.crte.monitoring;
 
 import android.app.Application;
 import com.crte.monitoring.test4.Content;
+import com.crte.monitoring.test4.SharedPreferencUtil;
 import com.github.nkzawa.emitter.Emitter;
 import com.github.nkzawa.socketio.client.IO;
 import com.github.nkzawa.socketio.client.Socket;
@@ -18,6 +19,7 @@ public class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        SharedPreferencUtil.init(this,"Video_Monitoring");
         PeerConnectionFactory.initializeAndroidGlobals(this, true, true, true, VideoRendererGui.getEGLContext());
         factory = new PeerConnectionFactory();
     }

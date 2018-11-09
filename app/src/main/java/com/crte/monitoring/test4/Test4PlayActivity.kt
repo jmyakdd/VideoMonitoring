@@ -27,7 +27,7 @@ class Test4PlayActivity : BaseActivity() {
     private val LOCAL_HEIGHT_CONNECTING = 100
 
     private val TAG = Test4PlayActivity::class.java.canonicalName
-    private lateinit var socket: Socket
+    private var socket: Socket? = null
     private var peer: PeerConnection? = null
     private var pcConstraints = MediaConstraints()
     private val iceServers = LinkedList<PeerConnection.IceServer>()
@@ -78,10 +78,10 @@ class Test4PlayActivity : BaseActivity() {
         } catch (e: URISyntaxException) {
             e.printStackTrace()
         }
-        socket.on("id", onId)
+        socket!!.on("id", onId)
         socket!!.on("message", onMessage)
         socket!!.on("getClient", onGetClient)
-        socket.connect()
+        socket!!.connect()
 
         pcConstraints.mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"))
         pcConstraints.mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"))
@@ -94,7 +94,7 @@ class Test4PlayActivity : BaseActivity() {
             val message = JSONObject()
             try {
                 message.put("name", "android_play")
-                socket.emit("readyToStream", message)
+                socket!!.emit("readyToStream", message)
                 socket!!.emit("getClient", App.groupId)
             } catch (e: JSONException) {
                 e.printStackTrace()
@@ -107,7 +107,7 @@ class Test4PlayActivity : BaseActivity() {
             var json: JSONObject = args[0] as JSONObject
             Log.e("test", json.toString())
             var type = json.getString("type")
-            var from = json.getString("from")
+//            var from = json.getString("from")
             var payload: JSONObject? = null
             if (!type.equals("init")) {
                 payload = json.getJSONObject("payload")
@@ -164,9 +164,9 @@ class Test4PlayActivity : BaseActivity() {
             peer!!.dispose()
             peer = null
         }
-        socket.off()
-        socket.disconnect()
-        socket.close()
+        socket!!.off()
+        socket!!.disconnect()
+        socket!!.close()
         super.onDestroy()
     }
 
@@ -195,7 +195,7 @@ class Test4PlayActivity : BaseActivity() {
         override fun onAddStream(p0: MediaStream?) {
             Log.e(TAG, "onAddStream")
             if (p0 != null) {
-                p0!!.videoTracks.get(0).addRenderer(VideoRenderer(remoteRender))
+                p0.videoTracks.get(0).addRenderer(VideoRenderer(remoteRender))
             }
         }
 

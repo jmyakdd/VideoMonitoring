@@ -24,7 +24,7 @@ class Test4RecordActivity : BaseActivity() {
     private val LOCAL_HEIGHT_CONNECTING = 100
 
     private val TAG = Test4RecordActivity::class.java.canonicalName
-    private lateinit var socket: Socket
+    private var socket: Socket? = null
     private var peer: PeerConnection? = null
     private var pcConstraints = MediaConstraints()
     private val iceServers = LinkedList<PeerConnection.IceServer>()
@@ -57,9 +57,9 @@ class Test4RecordActivity : BaseActivity() {
         } catch (e: URISyntaxException) {
             e.printStackTrace()
         }
-        socket.on("id", onId)
-        socket.on("message", onMessage)
-        socket.connect()
+        socket!!.on("id", onId)
+        socket!!.on("message", onMessage)
+        socket!!.connect()
 
         pcConstraints.mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"))
         pcConstraints.mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"))
@@ -74,8 +74,8 @@ class Test4RecordActivity : BaseActivity() {
             val message = JSONObject()
             try {
                 message.put("name", "android_record")
-                socket.emit("readyToStream", message)
-                socket.emit("initRecord", App.groupId)
+                socket!!.emit("readyToStream", message)
+                socket!!.emit("initRecord", App.groupId)
             } catch (e: JSONException) {
                 e.printStackTrace()
             }
@@ -167,9 +167,9 @@ class Test4RecordActivity : BaseActivity() {
             peer!!.dispose()
             peer = null
         }
-        socket.off()
-        socket.disconnect()
-        socket.close()
+        socket!!.off()
+        socket!!.disconnect()
+        socket!!.close()
         super.onDestroy()
     }
 
@@ -186,7 +186,7 @@ class Test4RecordActivity : BaseActivity() {
         message.put("to", to)
         message.put("type", type)
         message.put("payload", payload)
-        socket.emit("message", message)
+        socket!!.emit("message", message)
     }
 
     inner class MyObserver : PeerConnection.Observer {
